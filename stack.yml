@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  web:
+    image: ghcr.io/byronmoreno/semana8:1.0.0
+    ports:
+      - "1004:5001"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
