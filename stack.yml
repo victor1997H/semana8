@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   web:
-    image: ghcr.io/byronmoreno/semana8:1.0.0
+    image: ghcr.io/victor1997h/semana8:1.0.0
     ports:
       - "1004:5001"
     deploy:
