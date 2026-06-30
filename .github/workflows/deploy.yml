@@ -18,16 +18,16 @@ jobs:
       - name: Descargar código
         uses: actions/checkout@v4
 
-      # 2. Login en GitHub Container Registry
-      - name: Login en GHCR
+      # 2. Login en GHCR
+      - name: Login en GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      # 3. Construir imagen Docker
-      - name: Construir imagen
+      # 3. Construir imagen
+      - name: Construir imagen Docker
         run: |
           docker build -t ghcr.io/victor1997h/semana8:latest .
 
@@ -35,3 +35,48 @@ jobs:
       - name: Publicar imagen
         run: |
           docker push ghcr.io/victor1997h/semana8:latest
+
+      # 5. Login en VPS (SSH TEST)
+      - name: Probar conexión SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            echo "✅ VPS conectado correctamente"
+            hostname
+            whoami
+
+      # 6. Copiar archivo stack al VPS
+      - name: Subir stack.yml al VPS
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          source: "stack.yml"
+          target: "/home/${{ secrets.VPS_USER }}/semana8"
+
+      # 7. Deploy en VPS
+      - name: Deploy en VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            echo "🚀 Iniciando deploy"
+
+            cd ~/semana8
+
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            docker pull ghcr.io/victor1997h/semana8:latest
+
+            docker stack deploy -c stack.yml semana8
+
+            docker service ls
