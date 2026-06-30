@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  semana8:
+    image: ghcr.io/victor1997h/semana8:latest
+
+    networks:
+      - traefik-public
+
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+      labels:
+        - "traefik.enable=true"
+
+        # HTTP
+        - "traefik.http.routers.semana8.entrypoints=http"
+        - "traefik.http.routers.semana8.rule=Host(`victor.byronrm.com`)"
+
+        # Redirect HTTP -> HTTPS
+        - "traefik.http.middlewares.semana8-https.redirectscheme.scheme=https"
+        - "traefik.http.routers.semana8.middlewares=semana8-https"
+
+        # HTTPS
+        - "traefik.http.routers.semana8-secure.entrypoints=https"
+        - "traefik.http.routers.semana8-secure.rule=Host(`victor.byronrm.com`)"
+        - "traefik.http.routers.semana8-secure.tls=true"
+        - "traefik.http.routers.semana8-secure.tls.certresolver=http"
+
+        # Service
+        - "traefik.http.routers.semana8-secure.service=semana8"
+        - "traefik.http.services.semana8.loadbalancer.server.port=5001"
+
+        - "traefik.docker.network=traefik-public"
+
+networks:
+  traefik-public:
+    external: true
